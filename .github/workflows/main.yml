@@ -15,10 +15,16 @@ jobs:
           java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.22.0'
           channel: 'stable'
-      - run: |
+      - name: Prepare & Build APK
+        run: |
+          cp -r lib /tmp/lib_backup
+          cp pubspec.yaml /tmp/pubspec_backup.yaml
           flutter create . --project-name shifa_pharmacy --platforms=android
+          cp -r /tmp/lib_backup/* lib/
+          cp /tmp/pubspec_backup.yaml pubspec.yaml
+          rm -rf test
           flutter pub get
           flutter build apk --release
       - uses: actions/upload-artifact@v4
@@ -32,10 +38,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.22.0'
           channel: 'stable'
-      - run: |
+      - name: Prepare & Build Windows EXE
+        shell: pwsh
+        run: |
+          Copy-Item -Path "lib" -Destination "$env:TEMP\lib_backup" -Recurse -Force
+          Copy-Item -Path "pubspec.yaml" -Destination "$env:TEMP\pubspec_backup.yaml" -Force
           flutter create . --project-name shifa_pharmacy --platforms=windows
+          Copy-Item -Path "$env:TEMP\lib_backup\*" -Destination "lib" -Recurse -Force
+          Copy-Item -Path "$env:TEMP\pubspec_backup.yaml" -Destination "pubspec.yaml" -Force
+          if (Test-Path "test") { Remove-Item -Recurse -Force "test" }
           flutter pub get
           flutter build windows --release
       - uses: actions/upload-artifact@v4
